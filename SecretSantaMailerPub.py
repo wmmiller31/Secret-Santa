@@ -42,7 +42,7 @@ class tcolor:
 def sendEmail(sender_email, receiver_email, password, subject, body, smtp_server="smtp.gmail.com", port=587):
     """
     Sends an email using the specified SMTP server.
-    
+
     Parameters:
         sender_email (str): The sender's email address.
         receiver_email (str): The recipient's email address.
@@ -60,7 +60,7 @@ def sendEmail(sender_email, receiver_email, password, subject, body, smtp_server
         message["To"] = receiver_email
         message["Subject"] = subject
         message.attach(MIMEText(body, "plain"))
-        
+
         # Connect to the SMTP server and send the email
         with smtplib.SMTP(smtp_server, port) as server:
             server.starttls()  # Upgrade the connection to secure
@@ -93,7 +93,7 @@ class PlayerConfig:
     def validate_config(self):
         if len(self.players) < 1:
             raise RuntimeError(f"Provided list of players is less than 1. Must contain 2 or more players.")
-        
+
         # Make sure every player has an email
         number_of_players = len(self.players)
         if number_of_players != len(self.player_emails):
@@ -102,7 +102,7 @@ class PlayerConfig:
         for player in self.players:
             if player not in self.player_emails:
                 raise RuntimeError(f"Failed to find email for player '{player}'")
-        
+
         # Make sure the couples listed exist in the player list
         for partner_one, partner_two in self.couples.items():
           if partner_one not in self.players:
@@ -126,7 +126,7 @@ class SecretSanta:
             dev_email = self.game_config.dev_email
             print_blue("Would have sent email to %s, instead its being sent to %s" % (email_addr, dev_email))
             target_email = dev_email
-        
+
         # Actually send the email
         sendEmail(
             sender_email=self.game_config.dev_email,
@@ -138,8 +138,13 @@ class SecretSanta:
 
     def solve(self):
         solved = self.findMatches()
+        max_attempts = 10
+        attempt = 0
         while not solved:
+            attempt += 1
             solved = self.findMatches()
+            if attempt > max_attempts:
+                raise RuntimeError(f"Failed to find solution after {max_attempts} iterations")
 
         if not args.production:
             #Print final results
@@ -169,7 +174,7 @@ class SecretSanta:
                 while not validMatch:
                     matchName = self.players[match]
                     #You cant match with yourself or your partner
-                    if matchName != playerName and matchName != self.couples[playerName]:
+                    if matchName != playerName and matchName != self.couples.get(playerName, "NA"):
                         #You cant match with someone whos already got a match this round
                         if matchName not in takenPlayers:
                             #Avoid the same person getting the same match twice
@@ -235,8 +240,8 @@ class SecretSanta:
             body = (f"Dear {player},\n\nWe have decided to do a Secret Santa in place of the"
                     f" normal Christmas morning event this year. This means that each player"
                     f" ({player_list}) will be assigned {self.game_config.num_gifts} other player(s) secretly"
-                    f" to get a gift for. These people should not be your significant other, so if" 
-                    f" they are, please alert Will immediately.\n\nYour Secret Santa match is: {matches}!" 
+                    f" to get a gift for. These people should not be your significant other, so if"
+                    f" they are, please alert Will immediately.\n\nYour Secret Santa match is: {matches}!"
                     f"\n\nPlease do not share your results with anybody else, even your partner,"
                     f" until the gift exchange!\n\nMerry Christmas All!\n\n"
                     f"Your Friendly Christmas Python Bot\n"
@@ -244,7 +249,7 @@ class SecretSanta:
             self.setupEmail(playerEmail, subject, body)
 
 def initPlayerConfig():
-    players = ['Will', 'Lauren', 'Alex']
+    players = ['Will', 'Lauren', 'Alex', 'Lisa']
 
     couples = {"Will": "Lauren",
                "Lauren": "Will",
@@ -253,6 +258,7 @@ def initPlayerConfig():
     emails = {"Will": "EMAIL@gmail.com",
               "Lauren": "EMAIL@gmail.com",
               "Alex": "EMAIL@gmail.com",
+              "Lisa": "EMAIL@gmail.com",
               }
 
     player_config = PlayerConfig(players, couples, emails)
