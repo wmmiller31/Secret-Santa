@@ -26,7 +26,6 @@ def print_debug(line):
     print("DEBUG: %s" % (line))
   return
 
-
 class tcolor:
   red = '\033[31m'
   green = '\033[32m'
